@@ -6,6 +6,6 @@ Program uses RSA to encrypt/decrypt messages
 
 
 
-To start a server enter 'python server.py'
+To start a server enter 'python server.py'                     
 To start client.py write 'python client.py {username}'in the terminal
 
