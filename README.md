@@ -4,7 +4,10 @@ The public and secret keys are generated when the client tries to connect to the
 Server or user encrypt the message using public key of the receiver.       
 Every user doesn't share his secret key, which makes chatting safe.          
                    
-                       
+                     
+Required to have all the modules in the same directory:   ![Знімок екрана 2022-04-28 о 11 25 06](https://user-images.githubusercontent.com/92575094/165710531-e2256757-914b-4e5c-9ce4-3bb7aedc7ba6.png)           
+                  
+
 To start a server enter 'python server.py'         ![Знімок екрана 2022-04-28 о 11 19 01](https://user-images.githubusercontent.com/92575094/165709495-cfb3fb09-0ce0-4085-8de8-ba359a6c25c8.png)
            
 To start client.py write 'python client.py {username}'in the terminal:         ![Знімок екрана 2022-04-28 о 11 06 22](https://user-images.githubusercontent.com/92575094/165708585-29b60a85-653f-4cfe-9283-a4f568e8abd8.png)
