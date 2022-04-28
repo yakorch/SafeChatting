@@ -1,12 +1,12 @@
 import socket
 import threading
 import cryptography
-import json
 
 
 class Server:
 
     def __init__(self, port: int) -> None:
+        self.secret_key = None
         self.block_len = None
         self.public_key = None
         self.host = '127.0.0.1'
@@ -20,6 +20,10 @@ class Server:
         self.s.bind((self.host, self.port))
         self.s.listen(100)
 
+        # creating server keys
+        self.public_key, self.secret_key = cryptography.create_keys()
+        self.block_len = cryptography.get_block_length(self.public_key[0])
+
         while True:
             c, addr = self.s.accept()
             username = c.recv(1024).decode()
@@ -32,17 +36,8 @@ class Server:
             n, e, block_len = c.recv(1024).decode().split()
             # assign user's info to the dictionary
             self.user_keys[username] = (int(n), int(e), int(block_len))
-            for client in self.clients:  # after new client has joined, send new dictionary with public keys to everyone
-                # get user's info
-                user_keys = self.user_keys[self.username_lookup[client]]
-                # get new message and number of extra letters
-                extra, enhanced_msg = cryptography.find_extra_letters(json.dumps(self.user_keys), user_keys[2])
-                # encrypt the message
-                message = cryptography.encrypt_msg(message=enhanced_msg, block_len=user_keys[2],
-                                                   pub_key=(user_keys[0], user_keys[1]))
-                overall_info = message + " dict " + str(extra)
-                # send the dictionary to the client
-                client.send(overall_info.encode())
+
+            c.send((str(self.public_key[0]) + " " + str(self.public_key[1]) + " " + str(self.block_len)).encode())
 
             threading.Thread(target=self.handle_client, args=(c, addr,)).start()
 
@@ -50,22 +45,43 @@ class Server:
         for client in self.clients:
             # get user's info
             user_keys = self.user_keys[self.username_lookup[client]]
-            # get new message and number of extra letters
-            extra, enhanced_msg = cryptography.find_extra_letters(msg, user_keys[2])
-            # encrypt the message
-            message = cryptography.encrypt_msg(message=enhanced_msg, block_len=user_keys[2],
-                                               pub_key=(user_keys[0], user_keys[1]))
-            overall_info = message + " " + str(extra)
-
-            client.send(overall_info.encode())
+            client.send(self.create_string(msg, user_keys).encode())
 
     def handle_client(self, c: socket, addr):
         while True:
             # split a string by spaces to get a message, number of extra letters and sender
+            was_sent = False
             msg, extra, username = c.recv(1024).decode().split()
+            decrypted_message = cryptography.decrypt_msg(
+                msg, self.block_len, self.public_key, self.secret_key, int(extra))
+
             for client in self.clients:
-                if self.username_lookup[client] == username:  # check whether the receiver is correct
-                    client.send(str(msg + " " + extra).encode())
+                if username == "ALL":
+                    if client != c:
+                        user_keys = self.user_keys[self.username_lookup[client]]
+                        client.send(self.create_string(decrypted_message, user_keys).encode())
+                        was_sent = True
+                else:
+                    if self.username_lookup[client] == username:  # check whether the receiver is correct
+                        user_keys = self.user_keys[username]
+                        client.send(self.create_string(decrypted_message, user_keys).encode())
+                        was_sent = True
+            if was_sent is False:
+                message = f"{username} doesn't exist, try another one"
+                user_keys = self.user_keys[self.username_lookup[c]]
+                c.send(self.create_string(message, user_keys).encode())
+
+    @staticmethod
+    def create_string(message: str, user_keys: tuple) -> str:
+        """
+        Creates an encoded string with extra letters
+        using tuple 'user_keys' - (n, e, block length) for RSA
+        """
+        # get new message and number of extra letters
+        extra, enhanced_msg = cryptography.find_extra_letters(message, user_keys[2])
+        # encrypt the message
+        encrypted_message = cryptography.encrypt_msg(enhanced_msg, user_keys[2], (user_keys[0], user_keys[1]))
+        return str(encrypted_message + " " + str(extra))
 
 
 if __name__ == "__main__":
