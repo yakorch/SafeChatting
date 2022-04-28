@@ -10,13 +10,13 @@ Required to have all the modules in the same directory:   ![Знімок екр�
 
 To start a server enter 'python server.py'         ![Знімок екрана 2022-04-28 о 11 19 01](https://user-images.githubusercontent.com/92575094/165709495-cfb3fb09-0ce0-4085-8de8-ba359a6c25c8.png)
            
-To start client.py write 'python client.py {username}'in the terminal:         ![Знімок екрана 2022-04-28 о 19 20 05](https://user-images.githubusercontent.com/92575094/165799077-802da97d-7d44-458d-a439-209abf6cde0b.png)
+To start client.py write 'python client.py {username}'in the terminal:         ![image](https://user-images.githubusercontent.com/91615532/165799309-25e403c3-9582-4503-8098-99ba9042a542.png)
 
 
 Here's the example of usage:                    
            
 
-![Знімок екрана 2022-04-28 о 11 12 33](https://user-images.githubusercontent.com/92575094/165709108-8c607399-1dd6-48ab-b0c0-4049d71882dc.png)
+![Знімок екрана 2022-04-28 о 19 20 05](https://user-images.githubusercontent.com/92575094/165799077-802da97d-7d44-458d-a439-209abf6cde0b.png)
 
 
 
