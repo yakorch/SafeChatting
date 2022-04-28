@@ -28,4 +28,4 @@ If there is no '|' sign, then the message is sent to everyone.
 If username is wrong, user can resend a message:       ![Знімок екрана 2022-04-28 о 11 14 11](https://user-images.githubusercontent.com/92575094/165709078-c12fe355-6781-4ac5-b5b1-9447463f361b.png)            
 
 
-Allowed characters are all ascii symbols in from 32 to 122 inclusively            
+Allowed characters are ascii symbols in range from 32 to 122 inclusively            
