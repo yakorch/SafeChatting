@@ -1,6 +1,7 @@
 import socket
 import threading
 import cryptography
+import json
 
 
 class Server:
@@ -12,22 +13,12 @@ class Server:
         self.port = port
         self.clients = []
         self.username_lookup = {}
+        self.user_keys = {}
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def start(self):
         self.s.bind((self.host, self.port))
         self.s.listen(100)
-
-        # my code starts
-
-        (n, e), d = cryptography.create_keys()
-        block_len = cryptography.get_block_length(n)
-        self.block_len = block_len
-        self.public_key = (int(n), int(e))
-
-        # my code ends
-
-        # generate keys ...
 
         while True:
             c, addr = self.s.accept()
@@ -37,45 +28,44 @@ class Server:
             self.username_lookup[c] = username
             self.clients.append(c)
 
-            # send public key to the client
-
-            # public key - pair (n, e)
-
-            # ...
-
-            # encrypt the secret with the clients public key
-
-            # ...
-
-            # send the encrypted secret to a client
-
-            # ...
-
-            # my code starts
-
-            # send a pair (n, e, d) - a public key and a private key
-            c.send(f"{n} {e} {d} {block_len}".encode())
-
-            # my code ends
+            # receiving user's info
+            n, e, block_len = c.recv(1024).decode().split()
+            # assign user's info to the dictionary
+            self.user_keys[username] = (int(n), int(e), int(block_len))
+            for client in self.clients:  # after new client has joined, send new dictionary with public keys to everyone
+                # get user's info
+                user_keys = self.user_keys[self.username_lookup[client]]
+                # get new message and number of extra letters
+                extra, enhanced_msg = cryptography.find_extra_letters(json.dumps(self.user_keys), user_keys[2])
+                # encrypt the message
+                message = cryptography.encrypt_msg(message=enhanced_msg, block_len=user_keys[2],
+                                                   pub_key=(user_keys[0], user_keys[1]))
+                overall_info = message + " dict " + str(extra)
+                # send the dictionary to the client
+                client.send(overall_info.encode())
 
             threading.Thread(target=self.handle_client, args=(c, addr,)).start()
 
     def broadcast(self, msg: str):
         for client in self.clients:
+            # get user's info
+            user_keys = self.user_keys[self.username_lookup[client]]
+            # get new message and number of extra letters
+            extra, enhanced_msg = cryptography.find_extra_letters(msg, user_keys[2])
             # encrypt the message
-
-            extra, enhanced_msg = cryptography.find_extra_letters(msg, self.block_len)
-            message = cryptography.encrypt_msg(message=enhanced_msg, block_len=self.block_len, pub_key=self.public_key)
+            message = cryptography.encrypt_msg(message=enhanced_msg, block_len=user_keys[2],
+                                               pub_key=(user_keys[0], user_keys[1]))
             overall_info = message + " " + str(extra)
 
             client.send(overall_info.encode())
 
-    def handle_client(self, c: socket, addr):  # delete address
+    def handle_client(self, c: socket, addr):
         while True:
-            msg = c.recv(1024)
+            # split a string by spaces to get a message, number of extra letters and sender
+            msg, extra, username = c.recv(1024).decode().split()
             for client in self.clients:
-                if client != c:
-                    client.send(msg)
+                if self.username_lookup[client] == username:  # check whether the receiver is correct
+                    client.send(str(msg + " " + extra).encode())
 
 
 if __name__ == "__main__":
