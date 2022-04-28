@@ -1,12 +1,18 @@
 # SafeChatting
 Program uses RSA to encrypt/decrypt messages            
-Here's the example of usage:                 
+To start a server enter 'python server.py'          
+To start client.py write 'python client.py {username}'in the terminal:      ![Знімок екрана 2022-04-28 о 11 06 22](https://user-images.githubusercontent.com/92575094/165708585-29b60a85-653f-4cfe-9283-a4f568e8abd8.png)
 
-![Знімок екрана 2022-04-25 о 20 05 27](https://user-images.githubusercontent.com/92575094/165138544-90afeb4b-438e-4016-a221-a2c01e69eea7.png)
+Here's the example of usage:                    
+           
+
+![Знімок екрана 2022-04-28 о 11 12 33](https://user-images.githubusercontent.com/92575094/165709108-8c607399-1dd6-48ab-b0c0-4049d71882dc.png)
 
 
 
+        
+As seen on the picture, user can enter '|' sign to indicate receivers - can be one person or more                    
+If there is no '|' sign, then the message is sent to everyone.           
+         
 
-To start a server enter 'python server.py'                     
-To start client.py write 'python client.py {username}'in the terminal
-
+If username is wrong, user can resend a message:       ![Знімок екрана 2022-04-28 о 11 14 11](https://user-images.githubusercontent.com/92575094/165709078-c12fe355-6781-4ac5-b5b1-9447463f361b.png)
