@@ -49,24 +49,30 @@ class Server:
 
     def handle_client(self, c: socket, addr):
         while True:
-            # split a string by spaces to get a message, number of extra letters and sender
             was_sent = False
+            # split a string by spaces to get a message, number of extra letters and receiver
             msg, extra, username = c.recv(1024).decode().split()
+            # decrypting a message with server keys
             decrypted_message = cryptography.decrypt_msg(
                 msg, self.block_len, self.public_key, self.secret_key, int(extra))
 
             for client in self.clients:
                 if username == "ALL":
                     if client != c:
+                        # getting keys of a specific user
                         user_keys = self.user_keys[self.username_lookup[client]]
+                        # sending the encrypted message
                         client.send(self.create_string(decrypted_message, user_keys).encode())
                         was_sent = True
                 else:
                     if self.username_lookup[client] == username:  # check whether the receiver is correct
+                        # getting keys of a specific user
                         user_keys = self.user_keys[username]
+                        # sending the encrypted message
                         client.send(self.create_string(decrypted_message, user_keys).encode())
                         was_sent = True
             if was_sent is False:
+                # if the username is incorrect
                 message = f"{username} doesn't exist, try another username"
                 user_keys = self.user_keys[self.username_lookup[c]]
                 c.send(self.create_string(message, user_keys).encode())
@@ -81,6 +87,7 @@ class Server:
         extra, enhanced_msg = cryptography.find_extra_letters(message, user_keys[2])
         # encrypt the message
         encrypted_message = cryptography.encrypt_msg(enhanced_msg, user_keys[2], (user_keys[0], user_keys[1]))
+        # message with the number of extra letters
         return str(encrypted_message + " " + str(extra))
 
 

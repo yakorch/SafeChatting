@@ -36,7 +36,9 @@ class Client:
         self.s.send((str(self.public_key[0]) + " " + str(self.public_key[1]) + " " + str(self.block_len)).encode())
         # deadlock problem, the easiest way to solve - wait for another process to finish
         time.sleep(0.01)
+        # receiving server keys
         n, e, block_len = self.s.recv(1024).decode().split()
+        # saving these keys as an attribute
         self.server_keys = (int(n), int(e), int(block_len))
 
         message_handler = threading.Thread(target=self.read_handler, args=())
@@ -61,14 +63,14 @@ class Client:
             message = self.username + ": " + input()
             # separating a message to message and receivers
             message = message.split("|")
-            # no receivers mentioned - all will receive a message
+            # no receivers mentioned - everyone will receive a message
             if message.__len__() == 1:
                 message, receivers = message[0], "ALL"
             else:
                 # users separated by space, message keeps the same
                 message, receivers = message[0], message[1].split()
 
-            # getting number of extra letters and new message
+            # getting number of extra letters and a new message
             extra, enhanced_msg = cryptography.find_extra_letters(message, self.server_keys[2])
             # encoding a message
             encrypted_message = cryptography.encrypt_msg(enhanced_msg, self.server_keys[2],
@@ -78,14 +80,15 @@ class Client:
                 receivers = "ALL"
             if receivers == "ALL":
                 overall_info = encrypted_message + " " + str(extra) + " " + "ALL"
+                # sending message to the server
                 self.s.send(overall_info.encode())
                 continue
             for username in receivers:
                 # no need to send a message to oneself
                 if username != self.username:
                     overall_info = encrypted_message + " " + str(extra) + " " + username
-                    # sending info to the server
                     time.sleep(0.01)
+                    # sending message to the server
                     self.s.send(overall_info.encode())
 
 
