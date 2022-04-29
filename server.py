@@ -67,7 +67,7 @@ class Server:
                         client.send(self.create_string(decrypted_message, user_keys).encode())
                         was_sent = True
             if was_sent is False:
-                message = f"{username} doesn't exist, try another one"
+                message = f"{username} doesn't exist, try another username"
                 user_keys = self.user_keys[self.username_lookup[c]]
                 c.send(self.create_string(message, user_keys).encode())
 

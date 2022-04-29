@@ -2,8 +2,8 @@ import socket
 import threading
 import argparse
 import time
-
 import cryptography
+import multiprocessing
 
 
 class Client:
@@ -33,7 +33,6 @@ class Client:
         # gets the length of one block for encrypting
         self.block_len = cryptography.get_block_length(self.public_key[0])
         # sends this info to the server (except secret key)
-        # time.sleep(0.01)
         self.s.send((str(self.public_key[0]) + " " + str(self.public_key[1]) + " " + str(self.block_len)).encode())
         # deadlock problem, the easiest way to solve - wait for another process to finish
         time.sleep(0.01)
@@ -86,6 +85,7 @@ class Client:
                 if username != self.username:
                     overall_info = encrypted_message + " " + str(extra) + " " + username
                     # sending info to the server
+                    time.sleep(0.01)
                     self.s.send(overall_info.encode())
 
 
