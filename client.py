@@ -38,7 +38,7 @@ class Client:
         # sends this info to the server (except secret key)
         self.s.send(f"{self.public_key[0]} {str(self.public_key[1])} {str(self.block_len)}".encode())
         # deadlock problem, the easiest way to solve - wait for another process to finish
-        time.sleep(0.01)
+        # time.sleep(0.01)
         # receiving server keys
         n, e, block_len = self.s.recv(1024).decode().split()
         # saving these keys as an attribute
@@ -102,12 +102,10 @@ class Client:
                     self.s.send(overall_info.encode())
                     continue
                 for username in receivers:
-                    # no need to send a message to oneself
-                    if username != self.username:
-                        overall_info = f"{hash_msg},{encrypted_message} {extra} {username}"
-                        time.sleep(0.01)
-                        # sending message to the server
-                        self.s.send(overall_info.encode())
+                    overall_info = f"{hash_msg},{encrypted_message} {extra} {username}"
+                    time.sleep(0.01)
+                    # sending message to the server
+                    self.s.send(overall_info.encode())
             except Exception as err:
                 print(f"{err} occurred; use only ascii 32 - 122 tokens or you got unlucky")
 
