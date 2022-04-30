@@ -29,3 +29,6 @@ If username is wrong, user can resend a message:       ![Знімок екран
 
 
 Allowed characters are ascii symbols in range from 32 to 122 inclusively            
+      
+
+Message integrity implemented, the message with warning about error in sending the message can be printed.     
