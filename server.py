@@ -32,12 +32,13 @@ class Server:
             self.username_lookup[c] = username
             self.clients.append(c)
 
-            # receiving user's info
+            # receiving user's keys
             n, e, block_len = c.recv(1024).decode().split()
-            # assign user's info to the dictionary
+            # saving user's keys to the dictionary
             self.user_keys[username] = (int(n), int(e), int(block_len))
 
-            c.send((str(self.public_key[0]) + " " + str(self.public_key[1]) + " " + str(self.block_len)).encode())
+            # sending server keys to the client
+            c.send(f"{str(self.public_key[0])} {str(self.public_key[1])} {str(self.block_len)}".encode())
 
             threading.Thread(target=self.handle_client, args=(c, addr,)).start()
 
@@ -45,7 +46,10 @@ class Server:
         for client in self.clients:
             # get user's info
             user_keys = self.user_keys[self.username_lookup[client]]
-            client.send(self.create_string(msg, user_keys).encode())
+            # hashing the message
+            hash_msg = str(cryptography.hash_message(msg))
+            # sending hash and a notification about a new user
+            client.send(f"{hash_msg},{self.create_string(msg, user_keys)}".encode())
 
     def handle_client(self, c: socket, addr):
         while True:
@@ -63,23 +67,23 @@ class Server:
                     if client != c:
                         # getting keys of a specific user
                         user_keys = self.user_keys[self.username_lookup[client]]
-                        # sending the encrypted message
-                        # TODO: добавити hash до повідомлення
-                        client.send(hash_msg + ',' + self.create_string(decrypted_message, user_keys).encode())
+                        # sending the encrypted message with hash
+                        client.send(f"{hash_msg},{self.create_string(decrypted_message, user_keys)}".encode())
                         was_sent = True
                 else:
                     if self.username_lookup[client] == username:  # check whether the receiver is correct
                         # getting keys of a specific user
                         user_keys = self.user_keys[username]
-                        # sending the encrypted message
-                        # TODO: добавити hash до повідомлення
-                        client.send(hash_msg + ',' + self.create_string(decrypted_message, user_keys).encode())
+                        # sending the encrypted message with hash
+                        client.send(f"{hash_msg},{self.create_string(decrypted_message, user_keys)}".encode())
                         was_sent = True
             if was_sent is False:
                 # if the username is incorrect
                 message = f"{username} doesn't exist, try another username"
+                # hashing the warning
+                hash_warning = str(cryptography.hash_message(message))
                 user_keys = self.user_keys[self.username_lookup[c]]
-                c.send(self.create_string(message, user_keys).encode())
+                c.send(f"{hash_warning},{self.create_string(message, user_keys)}".encode())
 
     @staticmethod
     def create_string(message: str, user_keys: tuple) -> str:
@@ -92,7 +96,7 @@ class Server:
         # encrypt the message
         encrypted_message = cryptography.encrypt_msg(enhanced_msg, user_keys[2], (user_keys[0], user_keys[1]))
         # message with the number of extra letters
-        return str(encrypted_message + " " + str(extra))
+        return f"{encrypted_message} {extra}"
 
 
 if __name__ == "__main__":

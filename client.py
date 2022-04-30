@@ -3,7 +3,6 @@ import threading
 import argparse
 import time
 import cryptography
-from hashlib import sha256
 from secrets import compare_digest
 
 
@@ -19,6 +18,9 @@ class Client:
         self.username = username
 
     def init_connection(self):
+        """
+        Connects the client to the server
+        """
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.s.connect((self.server_ip, self.port))
@@ -34,7 +36,7 @@ class Client:
         # gets the length of one block for encrypting
         self.block_len = cryptography.get_block_length(self.public_key[0])
         # sends this info to the server (except secret key)
-        self.s.send((str(self.public_key[0]) + " " + str(self.public_key[1]) + " " + str(self.block_len)).encode())
+        self.s.send(f"{self.public_key[0]} {str(self.public_key[1])} {str(self.block_len)}".encode())
         # deadlock problem, the easiest way to solve - wait for another process to finish
         time.sleep(0.01)
         # receiving server keys
@@ -47,45 +49,44 @@ class Client:
         input_handler = threading.Thread(target=self.write_handler, args=())
         input_handler.start()
 
-    @staticmethod
-    def hash_message(data):
-        '''
-        returned as a string object, containing only hexadecimal digits
-        '''
-        data = data.encode('utf-8')
-        sha256_digest_1 = sha256(data)
-        hexdigest = sha256_digest_1.hexdigest()
-        return hexdigest
-
     def read_handler(self):
+        """
+        Receives the encoded message from a server
+        Checks for message integrity
+        """
         while True:
             # receive a message
             received = self.s.recv(1024).decode()
+            # get the hash out of the message
             hash_msg = received.split(",")[0]
+            # getting the message and the amount of extra letters in it
             message, extra = received.split(",")[1].split()
 
-            # decoding a massage
+            # decrypting a massage
             decrypted_message = cryptography.decrypt_msg(
                 message, self.block_len, self.public_key, self.secret_key, int(extra))
-            # TODO: порахувати hash 'decrypted_message'  і 'hash_msg'
-            if compare_digest(str(Client.hash_message(decrypted_message)), str(hash_msg)):
-                print("Message sent with error")
-            print(decrypted_message)
+            # checking if hashes of original message and decrypted one are different
+            if compare_digest(str(cryptography.hash_message(decrypted_message)), str(hash_msg)) is False:
+                print("Message was received with error")
+            else:
+                print(decrypted_message)
 
     def write_handler(self):
+        """
+        Responsible for sending encrypted messages to the server
+        """
         while True:
             message = self.username + ": " + input()
-            # TODO: порахувати hash від message
             # separating a message to message and receivers
             message = message.split("|")
-            hash_msg = str(Client.hash_message(message))
             # no receivers mentioned - everyone will receive a message
             if message.__len__() == 1:
                 message, receivers = message[0], "ALL"
             else:
                 # users separated by space, message keeps the same
                 message, receivers = message[0], message[1].split()
-
+            # calculating the hash of the message
+            hash_msg = str(cryptography.hash_message(message))
             # getting number of extra letters and a new message
             extra, enhanced_msg = cryptography.find_extra_letters(message, self.server_keys[2])
             # encoding a message
@@ -95,15 +96,14 @@ class Client:
             if not receivers:
                 receivers = "ALL"
             if receivers == "ALL":
-                overall_info = encrypted_message + " " + str(extra) + " " + "ALL"
+                overall_info = f"{hash_msg},{encrypted_message} {extra} ALL"
                 # sending message to the server
                 self.s.send(overall_info.encode())
                 continue
             for username in receivers:
                 # no need to send a message to oneself
                 if username != self.username:
-                    # TODO: добавити hash
-                    overall_info = hash_msg + ',' + encrypted_message + " " + str(extra) + " " + username
+                    overall_info = f"{hash_msg},{encrypted_message} {extra} {username}"
                     time.sleep(0.01)
                     # sending message to the server
                     self.s.send(overall_info.encode())

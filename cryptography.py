@@ -1,5 +1,6 @@
 from random import choice, randint
 import discretehelper
+from hashlib import sha256
 
 helper = discretehelper.helper
 
@@ -135,6 +136,17 @@ def get_block_length(public_first_part: int) -> int:
     while int(pivot + "90") < public_first_part:
         pivot += "90"
     return pivot.__len__()  # the length of one block for encoding
+
+
+def hash_message(data: str) -> str:
+    """
+    Returns a string object, containing only hexadecimal digits.
+    Hashes a message using sha256
+    """
+    data = data.encode("utf-8")
+    sha256_digest_1 = sha256(data)
+    hex_digest = sha256_digest_1.hexdigest()
+    return hex_digest
 
 
 def test():
