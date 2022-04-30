@@ -88,25 +88,28 @@ class Client:
             # calculating the hash of the message
             hash_msg = str(cryptography.hash_message(message))
             # getting number of extra letters and a new message
-            extra, enhanced_msg = cryptography.find_extra_letters(message, self.server_keys[2])
-            # encoding a message
-            encrypted_message = cryptography.encrypt_msg(enhanced_msg, self.server_keys[2],
-                                                         (self.server_keys[0], self.server_keys[1]))
-            # if receivers is an empty list
-            if not receivers:
-                receivers = "ALL"
-            if receivers == "ALL":
-                overall_info = f"{hash_msg},{encrypted_message} {extra} ALL"
-                # sending message to the server
-                self.s.send(overall_info.encode())
-                continue
-            for username in receivers:
-                # no need to send a message to oneself
-                if username != self.username:
-                    overall_info = f"{hash_msg},{encrypted_message} {extra} {username}"
-                    time.sleep(0.01)
+            try:
+                extra, enhanced_msg = cryptography.find_extra_letters(message, self.server_keys[2])
+                # encoding a message
+                encrypted_message = cryptography.encrypt_msg(enhanced_msg, self.server_keys[2],
+                                                             (self.server_keys[0], self.server_keys[1]))
+                # if receivers is an empty list
+                if not receivers:
+                    receivers = "ALL"
+                if receivers == "ALL":
+                    overall_info = f"{hash_msg},{encrypted_message} {extra} ALL"
                     # sending message to the server
                     self.s.send(overall_info.encode())
+                    continue
+                for username in receivers:
+                    # no need to send a message to oneself
+                    if username != self.username:
+                        overall_info = f"{hash_msg},{encrypted_message} {extra} {username}"
+                        time.sleep(0.01)
+                        # sending message to the server
+                        self.s.send(overall_info.encode())
+            except Exception as err:
+                print(f"{err} occurred; use only ascii 32 - 122 tokens or you got unlucky")
 
 
 if __name__ == "__main__":

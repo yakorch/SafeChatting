@@ -43,6 +43,10 @@ class Server:
             threading.Thread(target=self.handle_client, args=(c, addr,)).start()
 
     def broadcast(self, msg: str):
+        """
+        Sends a message about new user to everyone
+        """
+
         for client in self.clients:
             # get user's info
             user_keys = self.user_keys[self.username_lookup[client]]
@@ -52,6 +56,9 @@ class Server:
             client.send(f"{hash_msg},{self.create_string(msg, user_keys)}".encode())
 
     def handle_client(self, c: socket, addr):
+        """
+        Receives all users messages and sends them to the receiver
+        """
         while True:
             was_sent = False
             # split a string by spaces to get a message, number of extra letters and receiver
