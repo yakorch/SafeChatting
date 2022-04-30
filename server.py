@@ -27,7 +27,7 @@ class Server:
         while True:
             c, addr = self.s.accept()
             username = c.recv(1024).decode()
-            print(f"{username} tries to connect")
+            print(f"{username} connected")
             self.broadcast(f'new person has joined: {username}')
             self.username_lookup[c] = username
             self.clients.append(c)
@@ -51,7 +51,9 @@ class Server:
         while True:
             was_sent = False
             # split a string by spaces to get a message, number of extra letters and receiver
-            msg, extra, username = c.recv(1024).decode().split()
+            received = c.recv(1024).decode()
+            hash_msg = received.split(",")[0]
+            msg, extra, username = received.split(",")[1].split()
             # decrypting a message with server keys
             decrypted_message = cryptography.decrypt_msg(
                 msg, self.block_len, self.public_key, self.secret_key, int(extra))
@@ -62,6 +64,7 @@ class Server:
                         # getting keys of a specific user
                         user_keys = self.user_keys[self.username_lookup[client]]
                         # sending the encrypted message
+                        # TODO: добавити hash до повідомлення
                         client.send(self.create_string(decrypted_message, user_keys).encode())
                         was_sent = True
                 else:
@@ -69,6 +72,7 @@ class Server:
                         # getting keys of a specific user
                         user_keys = self.user_keys[username]
                         # sending the encrypted message
+                        # TODO: добавити hash до повідомлення
                         client.send(self.create_string(decrypted_message, user_keys).encode())
                         was_sent = True
             if was_sent is False:

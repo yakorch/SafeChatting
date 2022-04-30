@@ -3,7 +3,6 @@ import threading
 import argparse
 import time
 import cryptography
-import multiprocessing
 
 
 class Client:
@@ -50,7 +49,9 @@ class Client:
         while True:
             # receive a message
             received = self.s.recv(1024).decode()
-            message, extra = received.split()
+            # TODO: порахувати hash 'decrypted_message'  і 'hash_msg'
+            hash_msg = received.split(",")[0]
+            message, extra = received.split(",")[1].split()
 
             # decoding a massage
             decrypted_message = cryptography.decrypt_msg(
@@ -61,6 +62,7 @@ class Client:
     def write_handler(self):
         while True:
             message = self.username + ": " + input()
+            # TODO: порахувати hash від message
             # separating a message to message and receivers
             message = message.split("|")
             # no receivers mentioned - everyone will receive a message
@@ -86,7 +88,8 @@ class Client:
             for username in receivers:
                 # no need to send a message to oneself
                 if username != self.username:
-                    overall_info = encrypted_message + " " + str(extra) + " " + username
+                    # TODO: добавити hash
+                    overall_info = "hash," + encrypted_message + " " + str(extra) + " " + username
                     time.sleep(0.01)
                     # sending message to the server
                     self.s.send(overall_info.encode())
