@@ -65,7 +65,7 @@ class Server:
                         user_keys = self.user_keys[self.username_lookup[client]]
                         # sending the encrypted message
                         # TODO: добавити hash до повідомлення
-                        client.send(self.create_string(decrypted_message, user_keys).encode())
+                        client.send(hash_msg + ',' + self.create_string(decrypted_message, user_keys).encode())
                         was_sent = True
                 else:
                     if self.username_lookup[client] == username:  # check whether the receiver is correct
@@ -73,7 +73,7 @@ class Server:
                         user_keys = self.user_keys[username]
                         # sending the encrypted message
                         # TODO: добавити hash до повідомлення
-                        client.send(self.create_string(decrypted_message, user_keys).encode())
+                        client.send(hash_msg + ',' + self.create_string(decrypted_message, user_keys).encode())
                         was_sent = True
             if was_sent is False:
                 # if the username is incorrect

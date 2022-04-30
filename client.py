@@ -3,6 +3,8 @@ import threading
 import argparse
 import time
 import cryptography
+from hashlib import sha256
+from secrets import compare_digest
 
 
 class Client:
@@ -45,18 +47,29 @@ class Client:
         input_handler = threading.Thread(target=self.write_handler, args=())
         input_handler.start()
 
+    @staticmethod
+    def hash_message(data):
+        '''
+        returned as a string object, containing only hexadecimal digits
+        '''
+        data = data.encode('utf-8')
+        sha256_digest_1 = sha256(data)
+        hexdigest = sha256_digest_1.hexdigest()
+        return hexdigest
+
     def read_handler(self):
         while True:
             # receive a message
             received = self.s.recv(1024).decode()
-            # TODO: порахувати hash 'decrypted_message'  і 'hash_msg'
             hash_msg = received.split(",")[0]
             message, extra = received.split(",")[1].split()
 
             # decoding a massage
             decrypted_message = cryptography.decrypt_msg(
                 message, self.block_len, self.public_key, self.secret_key, int(extra))
-
+            # TODO: порахувати hash 'decrypted_message'  і 'hash_msg'
+            if compare_digest(str(Client.hash_message(decrypted_message)), str(hash_msg)):
+                print("Message sent with error")
             print(decrypted_message)
 
     def write_handler(self):
@@ -65,6 +78,7 @@ class Client:
             # TODO: порахувати hash від message
             # separating a message to message and receivers
             message = message.split("|")
+            hash_msg = str(Client.hash_message(message))
             # no receivers mentioned - everyone will receive a message
             if message.__len__() == 1:
                 message, receivers = message[0], "ALL"
@@ -89,7 +103,7 @@ class Client:
                 # no need to send a message to oneself
                 if username != self.username:
                     # TODO: добавити hash
-                    overall_info = "hash," + encrypted_message + " " + str(extra) + " " + username
+                    overall_info = hash_msg + ',' + encrypted_message + " " + str(extra) + " " + username
                     time.sleep(0.01)
                     # sending message to the server
                     self.s.send(overall_info.encode())
